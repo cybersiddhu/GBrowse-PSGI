@@ -16,7 +16,6 @@ $ENV{GBROWSE_CGIBIN}       ||= '$CGIBIN';  # Full path to our CGI installation d
 $ENV{GBROWSE_CONF}         ||= '$CONF';    # Full path to the configuration directory.
 $ENV{GBROWSE_HTDOCS}       ||= '$HTDOCS';  # Full path to the gbrowse static files.
 $ENV{GBROWSE_DEVELOPMENT}  ||= '';         # Optional. Set to "true" to enable debugging panels.
-$ENV{PERL5LIB}             = "$PERL5LIB";
 
 
 # 1. Via CGIBin
