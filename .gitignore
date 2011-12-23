@@ -1,0 +1,18 @@
+#Perl's build specific stuff
+Build
+_blib
+blib
+_build
+MANIFEST*
+MYMETA*
+META*
+tmp
+log
+*DS_Store*
+locallib
+gbrowse
+*.c
+*.o
+
+#exclude Build.PL
+!Build.PL
