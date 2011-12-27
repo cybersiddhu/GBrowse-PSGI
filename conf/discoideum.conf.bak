@@ -1,0 +1,503 @@
+
+[GENERAL]
+
+show sources = 0 # hides Proteome source
+description     = discoideum
+db_adaptor      = dicty::DB::Adaptor::GBrowse::Chado
+
+# DAS reference server
+das mapmaster   = SELF
+
+reference class = chromosome
+aggregators     = coding transcript alignment orf
+plugins         = FastaDumper RestrictionAnnotator
+
+# Web site configuration info
+stylesheet      = /inc/css/gbrowse.css
+js              = /inc/js/gbrowse
+buttons         = /gbrowse/images/buttons
+tmpimages       = /gbrowse/tmp
+gbrowse root    = /gbrowse
+
+image_padding   = 0
+
+region segment  = 100000
+
+# advanced features
+balloon tips    = 1
+drag and drop   = 1
+
+# no cache 
+cache time      = 0
+request timeout = 200
+
+# where to link to when user clicks in detailed view
+link            = AUTO
+
+# what image widths to offer
+image widths    = 640 800 1024
+
+# color of the selection rectangle
+hilite fill     = beige
+hilite outline  = red
+
+# default width of detailed view (pixels)
+default width   = 800
+default features= Gene Gene_Model cDNA_clone Genomic_frags contig tRNA Landmarks:region Coverage:overview
+
+# max and default segment sizes for detailed view
+max segment     = 100000
+default segment = 50000
+
+# zoom levels
+zoom levels     = 100 500 1000 2000 5000 10000 20000 40000 100000
+
+# colors of the overview
+overview bgcolor = lightgrey
+
+# examples to show in the introduction
+examples = M
+	   5:4619751..4629750
+	   mlcE
+	   6:200000..209999
+
+# "automatic" classes to try when an unqualified identifier is given
+automatic classes = EST gene mRNA databank_entry cDNA_clone contig chromosome tRNA
+
+# a footer
+footer = sub { use CGI::SSI;
+               my $ssi   = CGI::SSI->new();
+               return $ssi->include(virtual => "/inc/page-footer.html");}
+
+# Various places where you can insert your own HTML -- see configuration docs
+header = sub { use CGI::SSI;
+               my $ssi   = CGI::SSI->new();
+               return $ssi->include(virtual => "/inc/page-header.html");}
+
+html1 = 
+html2 = 
+html3 = 
+html4 = 
+html5 = 
+html6 =  sub {  my $seg = shift;
+                my $return;
+                if ($seg){
+                    my $chromosome = $seg->name();
+                    if ( $seg->class() eq 'chromosome' && grep /$chromosome/, qw(1,2,3,4,5,6) ) {
+                        my $start = $seg->start();
+                        my $end   = $seg->end();
+                        my $link    = "http://protists.ensembl.org/Dictyostelium_discoideum/Location/View?db=core;r=${chromosome}:${start}-${end}";
+                        my $onclick = "window.open('$link','dictyEnsembl','width=850,height=650,toolbar=1,status=1');";
+                        $return = qq {<br><center><input type="button" value="Link to dictyEnsembl" onClick="$onclick"></center>};  
+                    }
+                }
+                return $return. qq{ <br>Thanks to <a href="http://www.gmod.org">GMOD</a> for the development of this browser. };
+            }
+            
+            
+# Default glyph settings
+[TRACK DEFAULTS]
+glyph         = generic
+height        = 8
+bgcolor       = blue
+fgcolor       = blue
+label density = 25
+bump density  = 100
+balloon hover = <b>$name</b> is a $type spanning $ref from $start to $end. Click for more details. 
+
+   
+### TRACK CONFIGURATION ####   
+
+[Landmarks:region]
+feature      = "gene:dictyBase Curator"
+glyph        = box
+fgcolor      = steelblue
+bgcolor      = steelblue
+height       = 5
+base         = 1
+label        = 0
+maxdepth     = 0
+key          = Genes Overview
+citation     = Overview of the genes located in the 100 kbp genomic region containing the selected sequence.
+
+[Coverage:overview]
+feature      = "contig:Sequencing Center"
+glyph        = box
+bgcolor      = black
+fgcolor      = black
+height       = 4
+maxdepth     = 0
+description  = 0
+label        = 0
+key          = Contigs
+key          = Contigs Overview
+citation     = Overview of the contigs as assembled on the selected chromosome.    
+
+[Gene]
+feature      = "gene:dictyBase Curator"
+glyph        = arrow
+linewidth    = 3
+base         = 1
+maxdepth     = 0
+description  = 0
+fgcolor      = purple
+link         = sub  {   my $feat = shift;
+                        my $name = $feat->name();
+                        $name =~ /^DDB_G\d{7,}$/  ?
+                        return "/db/cgi-bin/gene_page.pl?primary_id=".$name :
+                        return "/db/cgi-bin/gene_page.pl?gene_name=".$name;
+			   }
+balloon hover width = 300
+balloon hover = /db/cgi-bin/dictyBase/service/gene_product.pl?name=$name
+balloon click width = 300
+balloon click = <table>
+                <tr>
+                <th bgcolor="cyan">Gene $name</th>
+                </tr>
+                <tr align='left'><th><a href="/db/cgi-bin/gene_page.pl?gene_name=$name">See gene details</a></th></tr>
+                <tr align='left'><th><a href="/db/cgi-bin/dictyBase/GO/goAnnotation.pl?gene_name=$name">See GO annotations</a></th></tr>
+                </table>
+key          = Genes
+citation     = The Gene track represents the sequence of the basic unit of inheritance.
+category     = Dicty  Genes
+
+[Gene_Model]
+remote feature = http://192.168.60.10/db/cgi-bin/dictyBase/service/primary_features.pl?ref=$ref&start=$start&end=$end&type=Gene_Models    
+height       = 10
+fgcolor      = sub {
+	               my $feature = shift;
+                   if    (( $feature->type() =~ /pseudogen/ )|| ( $feature->source =~ /Curated/ ))  { return "black";   }
+                   else { return ( $feature->strand eq '-1' ) ? "blue" : "firebrick";}
+	            }
+bgcolor      = sub {
+	               my $feature = shift;
+                   if    ( $feature->type() =~ /pseudogen/ )  { return "darkgray";   }
+                   elsif ( $feature->source =~ /Curated/ ) {
+                       return ( $feature->strand eq '-1' ) ? "blue" : "firebrick"; 
+                   }                 
+                   else { 
+                       return ( $feature->strand eq '-1' ) ? "lightsteelblue" : "lightsalmon"
+                   }; 
+                }
+link         = sub {
+	               my $feature = shift;
+	               return "/db/cgi-bin/feature_page.pl?dictybaseid=".$feature->id;
+	            }
+key          = Gene Models 
+citation     = The best available gene model is shown in the 'Gene Models' track. Manually reviewed gene models are shown in dark blue and dark red, 
+               while models not yet reviewed are shown in pale blue and red for Watson and Crick genes, respectively.   
+balloon hover = <b>$name</b> is a $source Gene Model spanning $ref from $start to $end. Click for more details.                    
+category     = Dicty  Genes
+
+[dictyBase]
+feature      = "mRNA:dictyBase Curator" "pseudogene:dictyBase Curator" "pseudogene:Soderbom Group"
+glyph        = transcript2
+bgcolor      = sub {
+	               my $feature = shift;
+                   if    ( $feature->type() =~ /pseudogen/ )  { return "darkgray";   }
+	               elsif ( $feature->strand eq '-1' )         { return "blue";      }
+	               else                                       { return "firebrick";   }
+	            }
+fgcolor      = black
+height       = 10
+description  = 0
+maxdepth     = 1
+key          = Curated Models
+citation     = The Curated Models track is a track which dictyBase curators create create from experimentally derived data typically deposited in GenBank. <br>  
+               Genes are assigned coordinates based on all available information.
+link         = sub {
+	               my $feature = shift;
+	               return "/db/cgi-bin/feature_page.pl?dictybaseid=".$feature->id;
+	            }
+balloon hover = <b>$name</b> is a Curated Model spanning $ref from $start to $end. Click for more details.
+category     = Dicty  Genes
+
+[Predictions]
+feature      = "mRNA:Sequencing Center"
+glyph        = transcript2
+bgcolor      = sub {
+	               my $feature = shift;
+	               if ($feature->strand eq '-1')    {return "lightsteelblue";}
+	               else                             {return "lightsalmon";}
+	            }
+fgcolor      = sub {
+                   my $feature = shift;
+                   return ( $feature->strand eq '-1' ) ? "blue" : "firebrick";
+               }
+height       = 10
+description  = 0
+maxdepth     = 1
+key          = Gene Predictions from Sequencing Centers
+citation     =  Gene predictions for chromosome 2 provided by personal communication with the <a href="http://genome.imb-jena.de/dictyostelium/" target="_blank">International consortium of the Dictyostelium Genome Project</a> as described in
+                <br>"The genome of the social amoeba Dictyostelium discoideum". 
+                <b>Eichinger L, Pachebat JA, Glockner G, Rajandream MA, Sucgang R, Berriman M, Song J, Olsen R, Szafranski K, 
+                       Xu Q, Tunggal B, Kummerfeld S, Madera M, Konfortov BA, Rivero F, Bankier AT, Lehmann R, Hamlin N, Davies R, 
+                       Gaudet P, Fey P, Pilcher K, Chen G, Saunders D, Sodergren E, Davis P, Kerhornou A, Nie X, Hall N, Anjard C, 
+                       Hemphill L, Bason N, Farbrother P, Desany B, Just E, Morio T, Rost R, Churcher C, Cooper J, Haydock S, 
+                       van Driessche N, Cronin A, Goodhead I, Muzny D, Mourier T, Pain A, Lu M, Harper D, Lindsay R, Hauser H, 
+                       James K, Quiles M, Madan Babu M, Saito T, Buchrieser C, Wardroper A, Felder M, Thangavelu M, Johnson D, 
+                       Knights A, Loulseged H, Mungall K, Oliver K, Price C, Quail MA, Urushihara H, Hernandez J, Rabbinowitsch E, 
+                       Steffen D, Sanders M, Ma J, Kohara Y, Sharp S, Simmonds M, Spiegler S, Tivey A, Sugano S, White B, Walker D, 
+                       Woodward J, Winckler T, Tanaka Y, Shaulsky G, Schleicher M, Weinstock G, Rosenthal A, Cox EC, Chisholm RL, 
+                       Gibbs R, Loomis WF, Platzer M, Kay RR, Williams J, Dear PH, Noegel AA, Barrell B, Kuspa A. (2005)</b>
+                       <i>Nature</i> 435(7038): 43-57.
+                Gene predictions for chromosome 6 provided by personal communication with the <a href="http://genome.imb-jena.de/dictyostelium/" target="newwin">International consortium of the Dictyostelium Genome Project</a> at Baylor College of Medicine (<a href="http://dictygenome.bcm.tmc.edu/">http://dictygenome.bcm.tmc.edu/</a>)
+link          = sub {
+	               my $feature = shift;
+	               return "/db/cgi-bin/feature_page.pl?dictybaseid=".$feature->id;
+	            }
+balloon hover = <b>$name</b> is a Predicted Model spanning $ref from $start to $end. Click for more details.
+category     = Dicty  Genes
+
+[Repredictions]
+feature      = "mRNA:geneID reprediction"
+glyph         = transcript2
+bgcolor      = sub {
+	               my $feature = shift;
+	               if ($feature->strand eq '-1')    {return "#7b68ee";}
+	               else                             {return "#CC6666";}
+	            }
+fgcolor      = gray
+height       = 10
+description  = 0
+maxdepth     = 1
+key          = Geneid Repredictions
+citation     = Gene repredictions performed by Daniel Schneider with assistance from Eric Just using the geneid software using a customized training set based on Dictyostelium curated models (Dec 2007).
+link         = sub {
+	               my $feature = shift;
+	               return "/db/cgi-bin/feature_page.pl?dictybaseid=".$feature->id;
+	            }
+balloon hover = <b>$name</b> is a Geneid Reprediction spanning $ref from $start to $end. Click for more details.
+category     = Dicty  Genes
+
+[tRNA]
+feature       = "tRNA:tRNAscan-SE analysis" "tRNA:Curator"
+glyph         = transcript2
+bgcolor       = magenta
+fgcolor       = black
+height        = 8
+description   = 0
+maxdepth      = 1
+connector     = solid
+key           = tRNAs
+citation      = The tRNAs were predicted at dictyBase using the tRNAscan-SE tool as described in<br><br>
+                tRNAscan-SE: a program for improved detection of transfer RNA genes in genomic sequence. <b>Lowe and Eddy.</b>
+                Nucleic Acids Res., 25(5):955-64, 1997<br>
+link          = sub {
+	               my $feature = shift;
+	               return "/db/cgi-bin/feature_page.pl?dictybaseid=".$feature->id;
+	            }
+category      = Dicty  Genes
+
+[ncRNA]
+feature       = "snRNA:Soderbom group"
+                "class_I_RNA:Soderbom group"
+                "class_I_RNA:Soderbom group"
+                "class_II_RNA:Soderbom group"
+                "C_D_box_snoRNA:Soderbom group"
+                "H_ACA_box_snoRNA:Soderbom group"
+                "SRP_RNA:Soderbom group"
+                "RNase_P_RNA:Soderbom group"
+                "RNase_MRP_RNA:Soderbom group"
+                "snoRNA:Soderbom group"
+                "rRNA:GenBank"   
+                "ncRNA:Curator"   
+glyph         = transcript2
+bgcolor       = indigo
+fgcolor       = black
+height        = 8
+description   = 0
+maxdepth      = 1
+connector     = solid
+key           = ncRNAs
+citation      = This track represents non-coding, functional RNAs
+link          = sub {
+	               my $feature = shift;
+	               return "/db/cgi-bin/feature_page.pl?dictybaseid=".$feature->id;
+                }
+category     = Dicty  Genes
+
+[cDNA_clone]
+feature       = "cDNA_clone:GenBank"
+glyph         = segments
+bgcolor       = yellow
+fgcolor       = black
+height        = 5
+description   = 0
+maxdepth      = 1
+connector     = solid
+key           = GenBank mRNA (cDNA) Alignments
+citation      = This track shows regions where GenBank mRNA's align to genomic sequence.
+                The mRNAs were blasted against the genomic sequence.  The hits were filtered using an algorithm described in:<br><br>
+               "Alignment of BLAST High-scoring Segment Pairs Based on the Longest Increasing Subsequence Algorithm"
+                <b>Zhang H</b>, Bioinformatics, 19:1391-1396, 2003.
+                <br><br>Only the longest total hit region which covers >=85% of the query seqeunce is shown.
+link          = http://www.ncbi.nlm.nih.gov/protein/$name
+#                sub {
+#	               my $feature = shift;
+#	               return "/db/cgi-bin/feature_page.pl?dictybaseid=".$feature->id;
+#	            }
+balloon hover = <b>$name</b> is a GenBank mRNA (cDNA) Alignment spanning $ref from $start to $end. Click for more details.
+category     = Dicty Alignments
+
+[Genomic_frags]
+feature       = "databank_entry:GenBank"
+glyph         = segments
+bgcolor       = orange
+fgcolor       = black
+height        = 5
+description   = 0
+maxdepth      = 1
+connector     = solid
+key           = CDS from GenBank Genomic Fragments Alignments
+citation      = This track shows regions where CDSs from GenBank DNA records align to genomic sequence.
+                The CDSs were blasted against the genomic sequence.  The hits were filtered using an algorithm described in:<br><br>
+               "Alignment of BLAST High-scoring Segment Pairs Based on the Longest Increasing Subsequence Algorithm"
+                <b>Zhang H</b>, Bioinformatics, 19:1391-1396, 2003.
+                <br><br>Only the longest total hit region which covers >=85% of the query seqeunce is shown.
+link          = http://www.ncbi.nlm.nih.gov/protein/$name
+#                sub {
+#	               my $feature = shift;
+#	               return "/db/cgi-bin/feature_page.pl?dictybaseid=".$feature->id;
+#	            }
+balloon hover = <b>$name</b> is a CDS from GenBank Genomic Fragments Alignment spanning $ref from $start to $end. Click for more details.	
+category      = Dicty Alignments
+
+[ESTs]
+feature       = "EST:GenBank" "EST:Hideko"
+glyph         = segments
+bgcolor       = sub { 
+                    my $glyph = pop ; 
+                    my $parent = $glyph->parent_feature();
+                    $parent->source eq 'GenBank' ? 'forestgreen' : 'lime';
+               }
+fgcolor       = black
+height        = 5
+description   = 0
+maxdepth      = 1
+group_pattern =  /\.[53]/
+connector     = solid
+key           = EST Alignments
+citation      = This track shows regions where ESTs align to genomic sequence.
+                The ESTs are published by the <a href="http://www.csm.biol.tsukuba.ac.jp/cDNAproject.html">Japanese cDNA project</a> and obtained from <a href="http://www.ncbi.nih.gov/Genbank/GenbankOverview.html" target="newwin">GenBank</a>.
+                They were blasted against the genomic sequence.  The hits were filtered using an algorithm described in:<br><br>
+               "Alignment of BLAST High-scoring Segment Pairs Based on the Longest Increasing Subsequence Algorithm"
+                <b>Zhang H</b>, Bioinformatics, 19:1391-1396, 2003.
+                <br><br>Only the longest total hit region which covers >=75% of the query seqeunce is shown.
+link          = sub {
+	               my $feature = shift;
+	               return "/db/cgi-bin/feature_page.pl?dictybaseid=".$feature->id;
+	            }
+category     = Dicty Alignments
+
+#[Solexa_Reads]
+#remote feature  = http://192.168.60.10/db/cgi-bin/dictyBase/download/download.pl?area=general&ID=merged.contigs.aligned_to_genome.gff3
+#key           = Solexa Reads
+#category      = Dicty Alignments
+#title	      = Solexa Read with score $score
+#
+#[contig]
+#feature       = "contig:Sequencing Center"
+#glyph         = generic
+#bgcolor       = black
+#fgcolor       = black
+#height        = 4
+#stranded      = 1
+#description   = 1
+#maxdepth      = 0
+#description   = 0
+#link          = 
+#key           = Contigs
+#citation      = A contig is a stretch of genomic DNA assembled from raw sequence data, as described in:<br><br>
+#                The genome of the social amoeba Dictyostelium discoideum. <b>Eichinger et al.</b>Nature, 435:43-57, 2005<br>
+#balloon hover = <b>$name</b> is a Contig spanning $ref from $start to $end.	
+#category      = Genome Assembly/Sequence
+
+[promoter]
+feature       = 'promoter'
+glyph         = triangle
+point         = 1
+orient        = N
+bgcolor       = sub {
+	               my $feature = shift;
+	               if ($feature->strand eq '-1') {return "#7b68ee";}
+	               else {return "#CC6666";}
+	            }
+description   = 1
+label         = 1
+key           = Putative TF binding sites 
+citation      = This track represents putative transcription factor binding sites predicted as described in <br><br>
+                dictyBase - a Dictyostelium bioinformatics resource update. 
+                <b>Fey, Gaudet, Curk, Zupan, Just, Basu, Merchant, Bushmanova, Shaulsky, Kibbe & Chisholm. </b>Nucleic Acids Res, database issue, 2009<br>
+link          = sub {
+	               my $feature = shift;
+                   use DictyBaseConfig;
+                   use dicty::Feature;
+                   my $feat = new dicty::Feature( -primary_id => uc( $feature->id() ));
+	               return $feat->details_url();
+	            }
+
+#[EntaBase_alignments]
+#feature       = "match_set:EntaBase"
+#glyph         = generic
+#bgcolor       = chartreuse
+#fgcolor       = black
+#height        = 4
+#stranded      = 1
+#description   = 0
+#maxdepth      = 0
+#key           = EntaBase Protein Alignments (TBLASTN)
+#citation      = Proteins from EntaBase were BLASTed using TBLASTN against the dicty Genome.   The hits were filtered using an algorithm described in:<br><br>
+#               "Alignment of BLAST High-scoring Segment Pairs Based on the Longest Increasing Subsequence Algorithm"
+#                <b>Zhang H</b>, Bioinformatics, 19:1391-1396, 2003.
+#                <br><br><b>Alignments on this track do not imply synteny.</b>
+#link          = sub {
+#	               my $feature = shift;
+#	               return "http://192.168.60.10/db/cgi-bin/feature_page.pl?primary_id=".$feature->id;
+#	            }
+#category     = External Alignments
+
+[TranslationF]
+glyph           = translation
+global feature  = 1
+frame0          = darkred
+frame1          = red
+frame2          = crimson
+height          = 20
+fgcolor         = blue
+strand          = +1
+translation     = 3frame
+key             = 3-frame translation (forward)
+citation        = At low zoom level, this track shows the amino acids encoded by the genomic sequence in each of the three open 
+                  reading frames. At high zoom level, stop codons are represented by a solid red line, such that open reading frames 
+                  can easily be detected.
+category        = Genome Assembly/Sequence
+
+[DNA/GC Content]
+glyph           = dna
+global feature  = 1
+height          = 50
+do_gc           = 1
+gc_window   	= auto	
+fgcolor         = red
+linewidth       = 7
+axis_color      = blue
+citation        = At low zoom level, the DNA sequence is shown. At high zoom level, the GC content is represented as a graph. 
+category        = Genome Assembly/Sequence
+
+[TranslationR]
+glyph           = translation
+global feature  = 1
+frame0          = cadetblue
+frame1          = blue
+frame2          = darkblue
+height          = 20
+fgcolor         = purple
+strand          = -1
+translation     = 3frame
+key             = 3-frame translation (reverse)
+citation        = At low zoom level, this track shows the amino acids encoded by the genomic sequence in each of the three open 
+                  reading frames. At high zoom level, stop codons are represented by a solid red line, such that open reading frames 
+                  can easily be detected.
+category        = Genome Assembly/Sequence
+
