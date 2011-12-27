@@ -13,6 +13,7 @@ locallib
 gbrowse
 *.c
 *.o
+INSTALL.SKIP
 
 #exclude Build.PL
 !Build.PL
