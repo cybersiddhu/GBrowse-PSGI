@@ -31,7 +31,7 @@ my $gbrowse = Plack::App::CGIBin->new( root => $ENV{GBROWSE_CGIBIN}, )->to_app;
 builder {
     
     # Typically running behind reverse proxy.
-    # enable "Plack::Middleware::ReverseProxy";
+    enable "Plack::Middleware::ReverseProxy";
     
     # Add debug panels if we are a development environment.
     if ($ENV{GBROWSE_DEVELOPMENT}) {
