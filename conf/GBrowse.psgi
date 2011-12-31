@@ -39,7 +39,7 @@ my $gbrowse = sub {
 builder {
 
     # Typically running behind reverse proxy.
-    enable "Plack::Middleware::ReverseProxy";
+    #enable "Plack::Middleware::ReverseProxy";
 
     # Add debug panels if we are a development environment.
     if ( $ENV{GBROWSE_DEVELOPMENT} ) {
@@ -48,6 +48,7 @@ builder {
             qw(Environment Memory ModuleVersions Timer PerlConfig Parameters Response Session TrackObjects DBITrace)
             ];
     }
+    enable 'Plack::Middleware::ContentLength';
 
     # Mount GBrowse at root. This is probably NOT what you want to do.
     mount '/' => $gbrowse;
