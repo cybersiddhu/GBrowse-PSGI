@@ -5,7 +5,7 @@ package Bio::Graphics::Browser2::Action;
 
 use strict;
 use Carp qw(croak confess cluck);
-use CGI();
+use CGI 'espcapeHTML';
 use Bio::Graphics::Browser2::TrackDumper;
 use Bio::Graphics::Browser2::Render::HTML;
 use Bio::Graphics::Browser2::SendMail;
@@ -17,6 +17,7 @@ use Data::Dumper;
 use Storable qw(dclone);;
 use POSIX;
 use Digest::MD5 'md5_hex';
+use URI::Escape;
 
 # these are actions for which shared session locks are all right
 my %SHARED_LOCK_OK = (retrieve_multiple => 1,
@@ -70,8 +71,8 @@ sub segment     {shift->render->segment}
 # list of authentication events allowed prior to authentication
 # all others are forbidden
 sub is_authentication_event {
-    my $class = shift;
-    my $action = CGI::param('action');
+    my ($class, $req) = @_;
+    my $action = $req->param('action');
     my %ok = map {$_=>1} qw(gbrowse_login authorize_login plugin_authenticate plugin_login get_translation_tables reconfigure_plugin);
     return $ok{$action};
 }
@@ -698,10 +699,10 @@ sub ACTION_autocomplete_user_search {
 sub ACTION_get_feature_info {
     my $self = shift;
     my $q    = shift;
-    defined(my $etype = CGI::unescape($q->param('event_type'))) or croak;
-    defined(my $track = CGI::unescape($q->param('track')))      or croak;
-    defined(my $dbid  = CGI::unescape($q->param('dbid')))       or croak;
-    defined(my $fid   = CGI::unescape($q->param('feature_id'))) or croak;
+    defined(my $etype = uri_unescape($q->param('event_type'))) or croak;
+    defined(my $track = uri_unescape($q->param('track')))      or croak;
+    defined(my $dbid  = uri_unescape($q->param('dbid')))       or croak;
+    defined(my $fid   = uri_unescape($q->param('feature_id'))) or croak;
     $fid or return (204,'text/plain','nothing at all');
 
     if ($fid eq '*summary*') {
