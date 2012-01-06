@@ -48,7 +48,7 @@ builder {
             qw(Environment Memory ModuleVersions Timer PerlConfig Parameters Response Session TrackObjects DBITrace)
             ];
     }
-    enable 'Plack::Middleware::ContentLength';
+    enable 'ContentLength';
 
     # Mount GBrowse at root. This is probably NOT what you want to do.
     mount '/' => $gbrowse;

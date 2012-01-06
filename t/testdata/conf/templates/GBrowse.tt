@@ -26,10 +26,10 @@ userdb_adaptor = auto
 
 # session settings
 session driver = driver:file;serializer:default
-session args   = Directory /tmp/gbrowse_testing/sessions
+session args   = Directory /tmp
 
 # Clean up settings (used by the gbrowse_clean script)
-expire session  = 1s  
+expire session  = 6m  
 
 # turn off annoying warnings!
 generate pdf = 0

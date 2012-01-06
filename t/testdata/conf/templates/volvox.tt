@@ -2,7 +2,7 @@
 description   = Volvox Example Database
 db_adaptor    = Bio::DB::GFF
 db_args       = -adaptor memory
-	        -gff    '$ENV{GBROWSE_DOCS}/testdata/data/volvox'
+	              -gff    [% gbrowse_docs %]/testdata/data/volvox
 
 aggregators = match
 	      BAC{left_end_read,right_end_read/BAC}
@@ -65,22 +65,22 @@ das mapmaster = SELF
 [volvox1:database]
 db_adaptor    = Bio::DB::GFF
 db_args       = -adaptor memory
-	        -gff    $ENV{GBROWSE_DOCS}/testdata/data/volvox
+	        -gff    [% gbrowse_docs %]/testdata/data/volvox
 
 [volvox2:database]
 db_adaptor    = Bio::DB::GFF
 db_args       = -adaptor memory
-	        -gff    $ENV{GBROWSE_DOCS}/testdata/data/volvox2
+	        -gff    [% gbrowse_docs %]/testdata/data/volvox2
 
 [volvox3:database]
 db_adaptor    = Bio::DB::SeqFeature::Store
 db_args       = -adaptor memory
-	        -dsn    $ENV{GBROWSE_DOCS}/testdata/data/volvox3
+	        -dsn    [% gbrowse_docs %]/testdata/data/volvox3
 
 [volvox4:database]
 db_adaptor    = Bio::DB::SeqFeature::Store
 db_args       = -adaptor memory
-	        -dir    $ENV{GBROWSE_DOCS}/testdata/data/volvox4
+	        -dir    [% gbrowse_docs %]testdata/data/volvox4
 
 ########################
 # Plugin configuration
@@ -135,7 +135,7 @@ key          = Example motifs
 remote renderer = $REMOTE1
 db_adaptor    = Bio::DB::SeqFeature::Store
 db_args       = -adaptor memory
-	        -dir    $ENV{GBROWSE_DOCS}/testdata/data/volvox4
+	        -dir    [% gbrowse_docs %]/testdata/data/volvox4
 feature      = alignment
 glyph        = segments
 category     = Alignments
@@ -295,7 +295,7 @@ geneticcode=12
 feature        = qtl
 db_adaptor    = Bio::DB::GFF
 db_args       = -adaptor memory
-	        -gff    $ENV{GBROWSE_DOCS}/testdata/data/volvox2
+	        -gff    [% gbrowse_docs %]/testdata/data/volvox2
 glyph          = xyplot
 graph_type     = points
 bgcolor        = black
@@ -322,7 +322,7 @@ key           = Binding Sites
 remote renderer = $REMOTE2
 db_adaptor    = Bio::DB::SeqFeature::Store
 db_args       = -adaptor memory
-	        -dsn    $ENV{GBROWSE_DOCS}/testdata/data/volvox3
+	        -dsn    [% gbrowse_docs %]/testdata/data/volvox3
 feature       = cleavage_site
 key           = Cleavage Sites
 

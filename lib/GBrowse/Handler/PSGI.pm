@@ -4,6 +4,8 @@ use strict;
 use Plack::Util::Accessor qw/conf htdocs/;
 use Plack::Request;
 use File::Spec::Functions;
+use Bio::Graphics::Browser2;
+use Bio::Graphics::Browser2::Render::HTML;
 
 # Other modules:
 
@@ -29,8 +31,9 @@ sub run {
     my $source  = $globals->create_data_source( $session->source );
     my $render
         = Bio::Graphics::Browser2::Render::HTML->new( $source, $session );
-    my $resp = $render->run($req);
-    return $resp->finalize;
+    $render->req($req);
+    $render->run;
+    return $render->response->finalize;
 
 }
 

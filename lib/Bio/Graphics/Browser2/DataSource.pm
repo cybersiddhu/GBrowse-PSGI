@@ -908,7 +908,7 @@ sub db_settings {
   my $symbolic_db_name;
 
   if ($track =~ /:database$/) {
-      $symbolic_db_name = $track
+      $symbolic_db_name = $track;
   } elsif (my $d  = $self->semantic_fallback_setting($track => 'database', $length)) {
       $symbolic_db_name = "$d:database";
   } elsif ($self->semantic_setting($track=>'db_adaptor',$length)) {

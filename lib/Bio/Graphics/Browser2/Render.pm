@@ -1328,8 +1328,8 @@ sub get_search_object {
         }
     );
     $search->init_databases(
-        param('dbid')
-        ? [ param('dbid') ]
+        $self->req->param('dbid')
+        ? [ $self->req->param('dbid') ]
         : ()
     );
     return $self->{searchobj} = $search;
@@ -2291,7 +2291,7 @@ sub update_state_from_cgi {
     $self->update_coordinates($state);
     $self->update_region($state);
 
-    if ( param('revert') ) {
+    if ( $self->req->param('revert') ) {
         $self->default_tracks($state);
     }
     else {
@@ -2525,20 +2525,23 @@ sub update_options {
     my $data_source = shift || $self->data_source;
 
     #  return unless param('width'); # not submitted
-    $state->{width} ||= $self->setting('default width')
+	my $req = $self->req;
+    $state->{width} = $req->param('width') ? $req->param('width') : $self->setting('default width')
         ;    # working around a bug during development
 
     $state->{grid} = 1
         unless exists $state->{grid};    # to upgrade from older settings
+	$state->{grid} = $req->param('grid') if $req->param('grid');
     $state->{flip} = 0;                  # obnoxious for this to persist
 
-    $state->{version} ||= param('version') || '';
-    do { $state->{$_} = param($_) if defined param($_) }
+
+    $state->{version} ||= $req->param('version') || '';
+    do { $state->{$_} = $req->param($_) if defined $req->param($_) }
         foreach qw(name source plugin stp ins head ks sk version
         grid flip width region_size show_tooltips cache
     );
 
-    if ( my @features = shellwords( param('h_feat') ) ) {
+    if ( my @features = shellwords( $req->param('h_feat') ) ) {
         $state->{h_feat} = {};
         for my $hilight (@features) {
             last if $hilight eq '_clear_';
@@ -2547,7 +2550,7 @@ sub update_options {
         }
     }
 
-    if ( my @regions = shellwords( param('h_region') ) ) {
+    if ( my @regions = shellwords( $req->param('h_region') ) ) {
         $state->{h_region} = [];
         foreach (@regions) {
             last if $_ eq '_clear_';
@@ -2558,7 +2561,7 @@ sub update_options {
     }
 
     # Process the magic "q" parameter, which overrides everything else.
-    if ( my @q = param('q') ) {
+    if ( my @q = $req->param('q') ) {
         delete $state->{$_} foreach qw(name ref h_feat h_region);
         $state->{q} = [ map { split /[+-]/ } @q ];
     }
@@ -2568,7 +2571,7 @@ sub update_options {
         $state->{name} =~ s/^\s+//;    # strip leading
         $state->{name} =~ s/\s+$//;    # and trailing whitespace
     }
-    $self->session->modified;
+    $self->session->modified($req, $state);
 }
 
 sub update_tracks {
