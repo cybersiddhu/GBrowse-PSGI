@@ -68,16 +68,19 @@ $render->req($req);
 $render->update_options;
 is($render->state->{width},1024,  'it returns the new value of the width');
 is($render->state->{grid},0,  'it returns the new grid value');
-#
-# is session management working? 
+
+# Session management
 # (Need to undef the renderer in order to call session's destroy method)
-#$session->flush;
-#undef $session;
-#undef $render;
-#
-#$session = $globals->session($id);
-#ok($session->id,$id);
-#$render  = Bio::Graphics::Browser2::Render::HTML->new($source,$session);
-#ok($render->init_database);
-#ok($render->init_plugins);
-#ok($render->state->{width},1024);
+my $id = $session->id;
+$session->flush;
+undef $session;
+
+$session = $browser2->session($id);
+is($session->id,$id,  'it got back the session id');
+use_ok('Bio::Graphics::Browser2::Render::HTML');
+$render  = Bio::Graphics::Browser2::Render::HTML->new($source,$session);
+my $req2 = PlackBuilder->mock_request;
+$render->req($req2);
+isa_ok($render->init_database,  'Bio::DB::GFF::Adaptor::memory');
+isa_ok($render->init_plugins, 'Bio::Graphics::Browser2::PluginSet');
+is($render->state->{width},1024,  'it got back the previous width setting');
