@@ -2,7 +2,7 @@ package GBrowse::Middleware::Session;
 
 use strict;
 use parent qw/Plack::Middleware/;
-use Plack::Util::Accessor qw/conf/;
+use Plack::Util::Accessor qw/conf state store/;
 use File::Spec::Functions;
 use Bio::Graphics::FeatureFile;
 use Plack::Middleware::Session;
@@ -18,14 +18,24 @@ use File::Basename;
 
 sub call {
     my ( $self, $env ) = @_;
+    my %opt;
+    for my $param (qw/store state/) {
+        $opt{$param} = $self->$param if $self->$param;
+    }
+    my $app = $self->app;
+    if ( !$self->conf )
+    {    ## -- without the GBrowe.conf it tries the default option
+        my $app = Plack::Middleware::Session->wrap( $app, %opt );
+        return $app->($env);
+    }
+
     my $conf_file = catfile( $self->conf, 'GBrowse.conf' );
     my $data = Bio::Graphics::FeatureFile->new( -file => $conf_file );
 
-    my $app = $self->app;
-    my ( $driver, $args ) = $self->session_args($data) || ( 'default', {} );
+    my $session_val = $self->session_args($data);
+    my ( $driver, $args ) = @$session_val ? @$session_val : ( 'default', {} );
     my $expires = $self->session_expires_args($data) || 2 * 3600;
-    my %opt = (
-        state => Plack::Session::State::Cookie->new( expires => $expires ) );
+
     if ( $driver eq 'default' ) {
         $opt{store} = Plack::Session::Store->new;
     }
@@ -40,21 +50,28 @@ sub call {
         load $module;
         $opt{store} = $module->new(%$args);
     }
+    ## -- unless provided it always default to cookie state
+    if ( not defined $opt{state} ) {
+        $opt{state} = Plack::Session::State::Cookie->new(
+            expires     => $expires,
+            session_key => 'sid'
+        );
+    }
     $app = Plack::Middleware::Session->wrap( $app, %opt );
-    $app->($env);
+    return $app->($env);
 }
 
 sub session_args {
     my ( $self, $config ) = @_;
-    my $value = $config->setting( 'GENERAL' => 'session driver' );
-    return if !$driver;
+    my $value = $config->setting( 'general' => 'session driver' );
+    return if !$value;
 
     my @session_data;
     my ( $driver_str, $serial_str ) = split /\;/, $value;
     my ($name) = ( ( split /\:/, $driver_str ) )[1];
     push @session_data, ucfirst $name;
 
-    my $args_str = $config->setting( 'GENERAL' => 'session args' );
+    my $args_str = $config->setting( 'general' => 'session args' );
     if ($args_str) {
         my ( $arg, $param ) = split /\s+/, $args_str;
         $arg = 'dir' if $arg eq 'Directory';
@@ -64,12 +81,15 @@ sub session_args {
         }
         push @session_data, { $arg => $param };
     }
-    return @session_data;
+    else {
+        push @session_data, {};
+    }
+    return \@session_data;
 }
 
 sub session_expires_args {
     my ( $self, $config ) = @_;
-    my $expires_str = $config->setting( 'GENERAL' => 'expire session' );
+    my $expires_str = $config->setting( 'general' => 'expire session' );
     return if !$expires_str;
 
     my $value;
