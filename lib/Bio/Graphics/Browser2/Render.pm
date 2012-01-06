@@ -33,7 +33,7 @@ use POSIX ":sys_wait_h";
 
 use constant VERSION              => 2.0;
 use constant DEBUG                => 0;
-use constant TRACE_RUN            => 1;
+use constant TRACE_RUN            => 0;
 use constant TRACE                => 0;               # shows top level events
 use constant OVERVIEW_SCALE_LABEL => 'Overview Scale';
 use constant REGION_SCALE_LABEL   => 'Region Scale';
@@ -1357,24 +1357,25 @@ sub init_plugins {
 # for activating plugins
 sub plugin_action {
     my $self = shift;
+    my $req = $self->req;
     my $action;
 
 # the logic of this is obscure to me, but seems to have to do with activating plugins
 # via the URL versus via fill-out forms, which may go through a translation.
-    if ( param('plugin_do') ) {
-        $action = $self->translate( param('plugin_do') )
+    if ( $req->param('plugin_do') ) {
+        $action = $self->translate( $req->param('plugin_do') )
             || $self->translate('Go');
     }
 
-    $action ||= param('plugin_action');
-    $action ||= 'find' if param('plugin_find');
+    $action ||= $req->param('plugin_action');
+    $action ||= 'find' if $req->param('plugin_find');
 
     return $action;
 }
 
 sub current_plugin {
     my $self = shift;
-    my $plugin_base = param('plugin') || param('plugin_find') or return;
+    my $plugin_base = $self->req->param('plugin') || $self->req->param('plugin_find') or return;
     $self->plugins->plugin($plugin_base);
 }
 
@@ -2693,11 +2694,11 @@ sub update_coordinates {
         $self->zoom_to_span( $state, $new_span );
         $position_updated++;
     }
-    elsif ( my ($scroll_data) = grep {/^(?:left|right) \S+/} param() ) {
+    elsif ( my ($scroll_data) = grep {/^(?:left|right) \S+/} $req->parameters->keys ) {
         $self->scroll( $state, $scroll_data );
         $position_updated++;
     }
-    elsif ( my ($zoom_data) = grep {/^zoom (?:out|in) \S+/} param() ) {
+    elsif ( my ($zoom_data) = grep {/^zoom (?:out|in) \S+/} $req->parameters->keys ) {
         $self->zoom( $state, $zoom_data );
         $position_updated++;
     }
@@ -2732,7 +2733,7 @@ sub update_coordinates {
 
         # update our "name" state and the CGI parameter
         $state->{name} = $self->region_string;
-        param( name => $state->{name} );
+        #param( name => $state->{name} );
 
         warn "name = $state->{name}" if DEBUG;
     }
@@ -3847,7 +3848,7 @@ sub render_deferred {
         $self->thin_region_segment );
 
     my $h_callback = $self->make_hilite_callback();
-    my $reqs   = $renderer->req_panels(
+    my $reqs   = $renderer->request_panels(
         {   labels            => $labels,
             section           => $section,
             deferred          => 1,
@@ -4304,8 +4305,8 @@ sub fcgi_req {
 sub fork {
     my $self = shift;
 
-    $self->prepare_modperl_for_fork();
-    $self->prepare_fcgi_for_fork('starting');
+    #$self->prepare_modperl_for_fork();
+    #$self->prepare_fcgi_for_fork('starting');
 
     my $child = CORE::fork();
     print STDERR "forked $child" if DEBUG;
@@ -4313,13 +4314,13 @@ sub fork {
 
     if ($child) {    # parent process
         $self->session->was_forked('parent') if ref $self;
-        $self->prepare_fcgi_for_fork('parent');
+        #$self->prepare_fcgi_for_fork('parent');
     }
 
     else {
         $self->session->was_forked('child') if ref $self;
         Bio::Graphics::Browser2::DataBase->clone_databases();
-        Bio::Graphics::Browser2::Render->prepare_fcgi_for_fork('child');
+        #Bio::Graphics::Browser2::Render->prepare_fcgi_for_fork('child');
         if ( ref $self ) {
             $self->userdb->clone_database()      if $self->userdb;
             $self->user_tracks->clone_database() if $self->user_tracks;
