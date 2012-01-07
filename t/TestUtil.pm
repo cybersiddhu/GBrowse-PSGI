@@ -41,5 +41,16 @@ sub template2conf {
 
 }
 
+sub renderhash2query {
+    my ($class, $render_hash, $name, $prepend) = @_;
+    my $query_str;
+    $query_str = $prepend if $prepend;
+    for my $key ( keys %{ $render_hash->{$name} } ) {
+        $query_str .= ";track_div_ids=$key;tk_$key=";
+        $query_str .= $render_hash->{$name}{$key};
+    }
+    return $query_str;
+}
+
 1;    # Magic true value required at end of module
 
