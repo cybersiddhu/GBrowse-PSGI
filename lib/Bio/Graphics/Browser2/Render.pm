@@ -2882,7 +2882,7 @@ sub asynchronous_update_sections {
     # Plugin Configuration Form
     # A params is used to determine the plugin
     if ( $handle_section_name{'plugin_configure_div'} ) {
-        my $plugin_base = param('plugin_base');
+        my $plugin_base = $self->req->param('plugin_base');
         if ($plugin_base) {
             my $plugin = $self->plugins->plugin($plugin_base);
             if ($plugin) {
