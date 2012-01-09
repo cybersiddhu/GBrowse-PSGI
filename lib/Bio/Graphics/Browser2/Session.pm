@@ -317,7 +317,7 @@ sub modified {
     my $source = $self->source;
     my $session = $self->session;
     my $config_hash = $self->config_hash;
-    for my $key(%$stash) {
+    for my $key(keys %$stash) {
     	if (my $value = $req->param($key)){
     		$config_hash->{page_settings}->{$key} = $value;
     	}

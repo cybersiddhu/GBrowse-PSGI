@@ -285,7 +285,7 @@ sub run {
 
     my $debug = $self->debug || TRACE;
     warn "[$$] RUN(): ",
-        $req->method(), ': ', url( -path => 1 ), ' ', $req->uri
+        $req->method(), ': ', $req->uri
         if $debug || TRACE_RUN;
     warn "[$$] session id = ", $self->session->id if $debug;
 
@@ -2578,26 +2578,27 @@ sub update_options {
 sub update_tracks {
     my $self  = shift;
     my $state = shift;
+    my $req = $self->req;
 
-    if ( my @add = param('add') ) {
-        my @style = param('style');
+    if ( my @add = $req->param('add') ) {
+        my @style = $req->param('style');
         $self->handle_quickie( \@add, \@style );
     }
 
     # selected tracks can be set by the 'l', 'label' or 't' parameter
     # the preferred parameter is 'l', because it implements correct
     # semantics for the label separator
-    if ( my @l = param('l') ) {
+    if ( my @l = $req->param('l') ) {
         $self->set_tracks( $self->split_labels_correctly(@l) );
     }
-    elsif ( @l = param('label') ) {
+    elsif ( @l = $req->param('label') ) {
         $self->set_tracks( $self->split_labels(@l) );
     }    #... the 't' parameter
-    elsif ( my @t = param('t') ) {
+    elsif ( my @t = $req->param('t') ) {
         $self->set_tracks( $self->split_labels(@t) );
     }    #... the 'ds' (data source) or the 'ts' (track source) parameter
-    elsif (( my @ds = shellwords param('ds') )
-        || ( my @ts = shellwords param('ts') ) )
+    elsif (( my @ds = shellwords $req->param('ds') )
+        || ( my @ts = shellwords $req->param('ts') ) )
     {
         my @main_l
             = @ds
@@ -2641,11 +2642,11 @@ sub update_tracks {
         $self->set_tracks(@main_l);
     }
 
-    if ( my @selected = $self->split_labels_correctly( param('enable') ) ) {
+    if ( my @selected = $self->split_labels_correctly( $req->param('enable') ) ) {
         $self->add_track_to_state($_) foreach @selected;
     }
 
-    if ( my @selected = $self->split_labels_correctly( param('disable') ) ) {
+    if ( my @selected = $self->split_labels_correctly( $req->param('disable') ) ) {
         $self->remove_track_from_state($_) foreach @selected;
     }
 
