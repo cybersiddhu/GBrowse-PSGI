@@ -4,6 +4,7 @@ use strict;
 
 # Other modules:
 use Plack::Request;
+use Carp;
 
 # Module implementation
 #
@@ -31,6 +32,20 @@ sub mock_request {
         $req = Plack::Request->new($env);
     }
     return $req;
+}
+
+sub mock_request_from_query {
+	my ($class,  $query_string) = @_;
+	croak "no query string given\n" if !$query_string;
+	return $class->mock_request($query_string);
+}
+
+sub mock_request_from_path {
+	my ($class,  $path) = @_;
+	croak "no query string given\n" if !$path;
+	my $new_env = $env;
+	$new_env->{PATH_INFO} = $path;
+	return Plack::Request->new($new_env);
 }
 
 1;    # Magic true value required at end of module
