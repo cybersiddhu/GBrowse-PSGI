@@ -6,14 +6,15 @@ use Module::Build;
 use File::Spec::Functions;
 use lib 't';
 use TestUtil;
+use PlackBuilder;
 
 my $current = Module::Build->current;
 
 ## -- generate all configuration files
 TestUtil->template2conf( builder => $current );
 
-my $base_dir = $current->base_dir;
-my $conf_file = catfile( $base_dir, 't', 'testdata', 'conf', 'GBrowse.conf' );
+my $base_dir = catdir($current->base_dir, 't');
+my $conf_file = catfile( $base_dir, 'testdata', 'conf', 'GBrowse.conf' );
 use_ok('Bio::Graphics::Browser2');
 
 my $globals = Bio::Graphics::Browser2->new($conf_file);
@@ -55,10 +56,10 @@ is( $globals->help_url,   '/gbrowse/.' );
 
 delete $ENV{$_} foreach qw(GBROWSE_CONF GBROWSE_DOCS GBROWSE_ROOT);
 
-$ENV{GBROWSE_DOCS} = $Bin;
+#$ENV{GBROWSE_DOCS} = $Bin;
 
 # exercise tmpdir a bit
-rmtree( '/tmp/gbrowse_testing/images', 0, 0 );    # in case it was left over
+#rmtree( '/tmp/gbrowse_testing/images', 0, 0 );    # in case it was left over
 my $path = $globals->tmpdir('test1/test2');
 is( $path, '/tmp/gbrowse_testing/test1/test2' );
 
@@ -68,7 +69,7 @@ is( @sources,                                    2 );
 is( $sources[0],                                 'volvox' );
 is( $globals->data_source_description('volvox'), 'Volvox Example Database' );
 is( $globals->data_source_path('yeast_chr1'),
-    catdir( $base_dir, 'testdata', 'conf', 'yeast_chr1.conf' ) );
+    catdir( $base_dir, 'testdata', 'conf', 'yeast.conf' ) );
 is( $globals->valid_source('volvox') ,  1);
 
 # try to create a session
@@ -89,30 +90,29 @@ $session = $globals->session($id);
 is( $session->id ,  $id );
 is( $session->source ,  'yeast_chr1' );
 
-# try whether we can update the data source via CGI
 ## -- this piece needed to be worked with Plack
-#$ENV{REQUEST_METHOD} = 'GET';
-#$ENV{QUERY_STRING}   = 'source=volvox';
-#ok( $globals->update_data_source($session) );
-#ok( $session->source eq 'volvox' );
-#
-#ok( $globals->update_data_source( $session, 'yeast_chr1' ), 'yeast_chr1' );
-#ok( $session->source eq 'yeast_chr1' );
-#
-#$CGI::Q->delete('source');
-#$ENV{PATH_INFO} = '/yeast_chr1';
-#ok( $globals->update_data_source($session), 'yeast_chr1' );
-#
-#$ENV{PATH_INFO} = '/invalid';
-#ok( $globals->update_data_source($session), 'yeast_chr1' );
-#
-#ok( $globals->update_data_source( $session, 'volvox' ), 'volvox' );
-#
+my $req = PlackBuilder->mock_request('source=volvox');
+$globals->req($req);
+is( $globals->update_data_source($session) ,  'volvox');
+is( $session->source ,  'volvox' );
+
+is( $globals->update_data_source( $session, 'yeast_chr1' ), 'yeast_chr1' );
+is( $session->source ,  'yeast_chr1' );
+
+$req = PlackBuilder->mock_request_from_path('/yeast_chr1');
+$globals->req($req);
+is( $globals->update_data_source($session), 'yeast_chr1' );
+
+$req = PlackBuilder->mock_request_from_path('/invalid');
+$globals->req($req);
+is( $globals->update_data_source($session), 'yeast_chr1' );
+is( $globals->update_data_source( $session, 'volvox' ), 'volvox' );
+
 
 # see whether the singleton caching system is working
 is( Bio::Graphics::Browser2->new($conf_file), $globals );
 
-my $time = time;
-utime( $time, $time, $conf_file );    # equivalent to "touch"
-isnt( Bio::Graphics::Browser2->new($conf_file) ,  $globals );
+#my $time = time;
+#utime( $time, $time, $conf_file );    # equivalent to "touch"
+#isnt( Bio::Graphics::Browser2->new($conf_file) ,  $globals );
 

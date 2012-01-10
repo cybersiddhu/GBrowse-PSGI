@@ -38,10 +38,5 @@ is( $browser2->data_source_description($dsn),
 );
 my $source = $browser2->create_data_source($dsn);
 isa_ok( $source, 'Bio::Graphics::Browser2::DataSource' );
-is_deeply([$source->databases],  [qw/volvox1 volvox2 volvox3 volvox4/],  'it has configured four data sources');
 
-my ($dbid, $adaptor, @argv) = $source->db_settings;
-is($dbid, 'general',  'it returs the default database section');
-my $db = $source->open_database;
-isa_ok($db, $adaptor);
 

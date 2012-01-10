@@ -25,8 +25,9 @@ sub mock_request {
     my ( $class, $query_string ) = @_;
     my $req;
     if ($query_string) {
+
         #$env->{QUERY_STRING} = $query_string;
-        $req = Plack::Request->new({QUERY_STRING => $query_string});
+        $req = Plack::Request->new( { QUERY_STRING => $query_string } );
     }
     else {
         $req = Plack::Request->new($env);
@@ -35,17 +36,29 @@ sub mock_request {
 }
 
 sub mock_request_from_query {
-	my ($class,  $query_string) = @_;
-	croak "no query string given\n" if !$query_string;
-	return $class->mock_request($query_string);
+    my ( $class, $query_string ) = @_;
+    croak "no query string given\n" if !$query_string;
+    return $class->mock_request($query_string);
 }
 
 sub mock_request_from_path {
-	my ($class,  $path) = @_;
-	croak "no query string given\n" if !$path;
-	my $new_env = $env;
-	$new_env->{PATH_INFO} = $path;
-	return Plack::Request->new($new_env);
+    my ( $class, $path ) = @_;
+    croak "no query string given\n" if !$path;
+    my $new_env = $env;
+    $new_env->{PATH_INFO} = $path;
+    return Plack::Request->new($new_env);
+}
+
+sub mock_request_with_remote {
+    my ( $class, %arg ) = @_;
+    croak "Need to pass options\n" if keys %arg == 0;
+    my $new_env = $env;
+    for my $k (qw/remote_user remote_host/) {
+        if ( defined $arg{$k} ) {
+            $new_env->{ uc $k } = $arg{$k};
+        }
+    }
+    return Plack::Request->new($new_env);
 }
 
 1;    # Magic true value required at end of module

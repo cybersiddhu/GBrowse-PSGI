@@ -465,7 +465,7 @@ sub create_data_source {
     if ($regex_key) { $dsn = "=~" . $regex_key; }
     my $source
         = Bio::Graphics::Browser2::DataSource->new( $path, $name,
-        $self->data_source_description($dsn), $self )
+        $self->data_source_description($dsn), $self, $self->req )
         or return;
     if ( my $adbs = $self->admin_dbs ) {
         my $path = File::Spec->catfile( $adbs, $dsn );
