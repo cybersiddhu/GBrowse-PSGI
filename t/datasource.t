@@ -106,41 +106,39 @@ is( join( ' ', $source->db2id($db1) ), 'volvox2:database' );
 %tracks = map { $_ => 1 } $source->labels;
 isnt( exists $tracks{Variation}, 1 );
 
-$req = PlackBuilder->mock_request_with_remote(remote_host => 'foo.cshl.edu');
+$req
+    = PlackBuilder->mock_request_with_remote( remote_host => 'foo.cshl.edu' );
 $globals->req($req);
-$source = $globals->create_data_source($session->source);
+$source = $globals->create_data_source( $session->source );
 %tracks = map { $_ => 1 } $source->labels;
-is( exists $tracks{Variation},  1 );
+isnt( exists $tracks{Variation}, 1 );
 
-$req = PlackBuilder->mock_request_with_remote(remote_user => 'lstein');
+$req = PlackBuilder->mock_request_with_remote( remote_user => 'lstein' );
 $globals->req($req);
-$source = $globals->create_data_source($session->source);
+$source = $globals->create_data_source( $session->source );
 %tracks = map { $_ => 1 } $source->labels;
-ok( exists $tracks{Variation},  1 );
+is( exists $tracks{Variation}, 1 );
 
 # test that make_link should produce a fatal error
 #ok( !eval { $source->make_link(); 1 } );
 
 # test that environment variable interpolation is working in dbargs
-#$ENV{GBROWSE_DOCS} = '/foo/bar';
+$ENV{GBROWSE_DOCS} = '/foo/bar';
 $source = $globals->create_data_source('yeast_chr1');
-#( undef, $adapter, @args ) = $source->db_settings;
-#like( $args[3], qr!^/foo/bar! );
-#
-#$ENV{GBROWSE_DOCS} = '/buzz/buzz';
-#( undef, $adapter, @args ) = $source->db_settings;
-#like( $args[3], qr!^/foo/bar! );    # old value cached
-
-#$source->clear_cache;
-#( undef, $adapter, @args ) = $source->db_settings;
-#like( $args[3] ,   qr!^/buzz/buzz! );    # old value cached
+my ( $ud, $adp, @argv ) = $source->db_settings;
+is( $argv[3],
+    catdir( $current->base_dir, 't', 'testdata', 'data', 'yeast_chr' ) );
 
 # Test the data_source_to_label() and track_source_to_label() functions
 my @labels = sort $source->track_source_to_label('foobar');
-is( scalar @labels, 0,  'it has no label named foobar' );
+is( scalar @labels, 0, 'it has no label named foobar' );
 @labels = sort $source->track_source_to_label('modENCODE');
-is( "@labels", "CDS Genes ORFs" ,  'it has CDS Genes ORFs as the labels for modENCODE track source');
-@labels = sort $source->track_source_to_label( 'marc perry', 'nicole washington' );
+is( "@labels",
+    "CDS Genes ORFs",
+    'it has CDS Genes ORFs as the labels for modENCODE track source'
+);
+@labels = sort $source->track_source_to_label( 'marc perry',
+    'nicole washington' );
 is( "@labels", "CDS ORFs" );
 @labels = sort $source->data_source_to_label('SGD');
 is( "@labels", "CDS Genes ORFs" );
@@ -162,7 +160,7 @@ is( "@labels", "CDS" );
     is( @new_labels, @labels + 1 );
     my $setting = $source->setting( fred => 'glyph' );
     is( $setting, 'segments' );
-    is( $source->code_setting( fred => 'color' )->() , 'blue');
+    is( $source->code_setting( fred => 'color' )->(), 'blue' );
 
     my $fh = IO::String->new(<<END);
 [tester]
