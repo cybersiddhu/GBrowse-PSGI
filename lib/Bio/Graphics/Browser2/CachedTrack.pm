@@ -9,7 +9,7 @@ use warnings;
 use Carp;
 use Fcntl ':flock';
 use File::Spec;
-use File::Path;
+use File::Path qw/make_path/;
 use IO::File;
 use Digest::MD5 'md5_hex';
 use Storable qw(:DEFAULT freeze thaw);
@@ -74,7 +74,7 @@ sub cachedir {
     my $key  = $self->key;
     my @comp = $key =~ /(..)/g;
     my $path = File::Spec->catfile($self->cache_base,@comp[0..2],$key);
-    mkpath ($path) unless -e $path;
+    make_path($path,  {verbose => 1}) unless -e $path;
     die "Can't mkpath($path): $!" unless -d $path;
     return $path;
 }
