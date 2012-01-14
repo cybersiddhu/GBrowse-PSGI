@@ -52,5 +52,13 @@ sub renderhash2query {
     return $query_str;
 }
 
+sub remove_config {
+    my ( $class, %arg ) = @_;
+    my $builder = $arg{builder} || Module::Build->current;
+    my $output_folder = $arg{output_folder}
+        || catdir( $builder->base_dir, 't', 'testdata', 'conf' );
+	unlink catfile($output_folder, $conf{$_}) for keys %conf;
+}
+
 1;    # Magic true value required at end of module
 

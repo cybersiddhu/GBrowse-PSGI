@@ -25,9 +25,9 @@ sub mock_request {
     my ( $class, $query_string ) = @_;
     my $req;
     if ($query_string) {
-
-        #$env->{QUERY_STRING} = $query_string;
-        $req = Plack::Request->new( { QUERY_STRING => $query_string } );
+    	my $new_env = $env;
+    	$new_env->{QUERY_STRING} = $query_string;
+        $req = Plack::Request->new( $new_env );
     }
     else {
         $req = Plack::Request->new($env);

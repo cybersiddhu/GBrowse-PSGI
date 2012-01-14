@@ -74,7 +74,7 @@ sub cachedir {
     my $key  = $self->key;
     my @comp = $key =~ /(..)/g;
     my $path = File::Spec->catfile($self->cache_base,@comp[0..2],$key);
-    make_path($path,  {verbose => 1}) unless -e $path;
+    make_path($path) unless -e $path;
     die "Can't mkpath($path): $!" unless -d $path;
     return $path;
 }

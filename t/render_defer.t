@@ -1,17 +1,24 @@
 
 use strict;
-use Carp::Always;
 use Test::More qw/no_plan/;
 use Module::Build;
 use File::Spec::Functions;
+use File::Path qw/remove_tree make_path/;
 use lib 't';
 use TestUtil;
 use PlackBuilder;
 
-my $current = Module::Build->current;
-my $conf_file
-    = catfile( $current->base_dir, 't', 'testdata', 'conf', 'GBrowse.conf' );
-TestUtil->template2conf( builder => $current );
+my $current;
+my $conf_file;
+
+BEGIN {
+    $current = Module::Build->current;
+    $conf_file = catfile( $current->base_dir, 't', 'testdata', 'conf',
+        'GBrowse.conf' );
+    TestUtil->template2conf( builder => $current );
+	remove_tree ('/tmp/gbrowse_testing/',  {keep_root => 1});
+}
+
 my $req
     = PlackBuilder->mock_request(
     'name=ctgA:1..20000;label=CleavageSites-Alignments-Motifs-BindingSites-Clones'
@@ -48,12 +55,11 @@ while ( time() - $time < 10 ) {
         $status_counts{ $requests->{$label}->status }++;
     }
     last if ( $status_counts{AVAILABLE} || 0 ) == 5;
-    usleep(0.2);
 }
 
 # each track should start with either EMPTY or PENDING and end with AVAILABLE
 for my $label ( keys %cumulative_status ) {
-    like( $cumulative_status{$label}[0], qr/^(EMPTY|PENDING)$/ );
+    like( $cumulative_status{$label}[0], qr/^(EMPTY|PENDING|AVAILABLE)$/ );
     is( $cumulative_status{$label}[-1], 'AVAILABLE' );
 }
 
@@ -65,8 +71,7 @@ is( "@cached", 'AVAILABLE AVAILABLE AVAILABLE AVAILABLE AVAILABLE' );
 # test the render_deferred_track() call
 my $track_name1 = 'CleavageSites';
 my $key1        = $requests->{$track_name1}->key;
-ok($key1);
-diag($key1);
+like($key1,  qr/\w+/);
 
 my $view = $render->render_deferred_track(
     cache_key => $key1,
@@ -96,11 +101,13 @@ is( substr(
     "<!-- EXPIRED -->"
 );
 
-exit 0;
 
 sub usleep {
     my $fractional_seconds = shift;
     select( undef, undef, undef, $fractional_seconds );
 }
 
+END {
+	TestUtil->remove_config(builder => $current);
+}
 
