@@ -27,6 +27,7 @@ sub run {
     my $req     = Plack::Request->new($env);
     my $globals = Bio::Graphics::Browser2->new(
         catfile( $self->conf, 'GBrowse.conf' ) );
+	$globals->req($req);
     my $session = $globals->session;
     my $source  = $globals->create_data_source( $session->source );
     my $render
