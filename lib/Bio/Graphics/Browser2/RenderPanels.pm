@@ -1598,18 +1598,18 @@ sub run_local_requests {
     my $filters
         = $self->generate_filters( $settings, $source, \@labels_to_generate );
 
-    my ( %children, %reaped );
+#    my ( %children, %reaped );
+#
+#    local $SIG{CHLD} = sub {
+#        while ( ( my $pid = waitpid( -1, WNOHANG ) ) > 0 ) {
+#            print STDERR "[$$] reaped render child $pid" if DEBUG;
+#            $reaped{$pid}++;
+#            delete $children{$pid} if $children{$pid};
+#        }
+#    };
 
-    local $SIG{CHLD} = sub {
-        while ( ( my $pid = waitpid( -1, WNOHANG ) ) > 0 ) {
-            print STDERR "[$$] reaped render child $pid" if DEBUG;
-            $reaped{$pid}++;
-            delete $children{$pid} if $children{$pid};
-        }
-    };
-
-    my $max_processes = $self->source->global_setting('max_render_processes')
-        || MAX_PROCESSES;
+#    my $max_processes = $self->source->global_setting('max_render_processes')
+        #|| MAX_PROCESSES;
 
     for my $label (@labels_to_generate) {
 
@@ -1618,21 +1618,21 @@ sub run_local_requests {
 
         # don't let there be more than this many processes
         # running simultaneously
-        while ( ( my $c = keys %children ) >= $max_processes ) {
-            warn "[$$] too many processes ($c), sleeping" if DEBUG;
-            sleep 1;
-        }
-
+#        while ( ( my $c = keys %children ) >= $max_processes ) {
+#            warn "[$$] too many processes ($c), sleeping" if DEBUG;
+#            sleep 1;
+#        }
+#
         $render ||= 'Bio::Graphics::Browser2::Render';
-        my $child = $render->fork();
-        croak "Can't fork: $!" unless defined $child;
-        if ($child) {
-            warn "[$$] Launched rendering process $child for $label" if DEBUG;
-            $children{$child}++
-                unless
-                $reaped{$child}; # in case child was reaped before it was sown
-            next;
-        }
+#        my $child = $render->fork();
+#        croak "Can't fork: $!" unless defined $child;
+#        if ($child) {
+#            warn "[$$] Launched rendering process $child for $label" if DEBUG;
+#            $children{$child}++
+#                unless
+#                $reaped{$child}; # in case child was reaped before it was sown
+#            next;
+#        }
 
         ( my $base = $label ) =~ s/:(overview|region|details?)$//;
         warn "label=$label, base=$base, file=$feature_files->{$base}"
@@ -1658,9 +1658,9 @@ sub run_local_requests {
         my $oldaction;
         my $time = time();
         eval {
-            local $SIG{ALRM} = sub { warn "alarm clock"; die "timeout" };
-            alarm($timeout);
-
+#            local $SIG{ALRM} = sub { warn "alarm clock"; die "timeout" };
+#            alarm($timeout);
+#
             $requests->{$label}->lock();
             my ( $gd, $map, $titles );
 
@@ -1744,7 +1744,7 @@ sub run_local_requests {
 
             $requests->{$label}->put_data( $gd, $map, $titles );
         };
-        alarm(0);
+#        alarm(0);
 
         my $elapsed = time() - $time;
         warn "render($label): $elapsed seconds ", ( $@ ? "(error)" : "(ok)" )
@@ -1761,14 +1761,14 @@ sub run_local_requests {
                 $requests->{$label}->flag_error($@);
             }
         }
-        CORE::exit 0;    # in child;
+#        CORE::exit 0;    # in child;
     }
     warn "[$$] waiting for children" if DEBUG;
 #    if ( $ENV{MOD_PERL} ) {
 #        $SIG{CHLD}->();    # hacky workaround
 #    }
 #    else {
-        sleep while %children;
+        #sleep while %children;
     #}
     warn "done waiting" if DEBUG;
 
