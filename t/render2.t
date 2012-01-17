@@ -2,22 +2,25 @@ use strict;
 use Test::More qw/no_plan/;
 use Module::Build;
 use File::Spec::Functions;
+use File::Path qw/remove_tree/;
 use lib 't';
 use TestUtil;
 use PlackBuilder;
 
-my $current = Module::Build->current;
-my $conf_file = catfile(
-    $current->base_dir, 't',
-    'testdata',                       'conf',
-    'GBrowse.conf'
-);
-my $req = PlackBuilder->mock_request();
-TestUtil->template2conf(builder => $current);
+my $current;
+my $conf_file;
+
+BEGIN {
+    $current = Module::Build->current;
+    $conf_file = catfile( $current->base_dir, 't', 'testdata', 'conf',
+        'GBrowse.conf' );
+    TestUtil->template2conf( builder => $current );
+}
 
 use_ok('Bio::Graphics::Browser2');
 use_ok('Bio::Graphics::Browser2::Render');
 
+my $req = PlackBuilder->mock_request;
 my $browser2 = Bio::Graphics::Browser2->new($conf_file);
 $browser2->req($req);
 my $session  = $browser2->session;
@@ -85,3 +88,9 @@ $render->req($req2);
 isa_ok($render->init_database,  'Bio::DB::GFF::Adaptor::memory');
 isa_ok($render->init_plugins, 'Bio::Graphics::Browser2::PluginSet');
 is($render->state->{width},1024,  'it got back the previous width setting');
+
+
+END {
+	TestUtil->remove_config(builder => $current);
+	remove_tree ('/tmp/gbrowse_testing/',  {keep_root => 1});
+}

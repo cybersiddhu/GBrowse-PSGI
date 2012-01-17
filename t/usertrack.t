@@ -3,14 +3,20 @@ use Test::More qw/no_plan/;
 use Module::Build;
 use File::Spec::Functions;
 use Bio::Graphics::FeatureFile;
+use File::Path qw/remove_tree/;
 use lib 't';
 use TestUtil;
 use PlackBuilder;
 
-my $current = Module::Build->current;
-my $conf_file
-    = catfile( $current->base_dir, 't', 'testdata', 'conf', 'GBrowse.conf' );
-TestUtil->template2conf( builder => $current );
+my $current;
+my $conf_file;
+
+BEGIN {
+    $current = Module::Build->current;
+    $conf_file = catfile( $current->base_dir, 't', 'testdata', 'conf',
+        'GBrowse.conf' );
+    TestUtil->template2conf( builder => $current );
+}
 
 use_ok('Bio::Graphics::Browser2');
 use_ok('Bio::Graphics::Browser2::Render::HTML');
@@ -71,3 +77,8 @@ $usertracks->delete_file($file);
 isnt( -e $conf,  1,  'conf file should not be present' );
 is( $usertracks->tracks + 0, 0 );
 
+
+END {
+	TestUtil->remove_config(builder => $current);
+	remove_tree ('/tmp/gbrowse_testing/',  {keep_root => 1});
+}

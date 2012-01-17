@@ -2,15 +2,22 @@ use strict;
 use Test::More qw/no_plan/;
 use Module::Build;
 use File::Spec::Functions;
+use File::Path qw/remove_tree/;
 use lib 't';
 use TestUtil;
 use PlackBuilder;
 use Carp::Always;
 
-my $current = Module::Build->current;
-my $conf_file
-    = catfile( $current->base_dir, 't', 'testdata', 'conf', 'GBrowse.conf' );
-TestUtil->template2conf( builder => $current );
+
+my $current;
+my $conf_file;
+
+BEGIN {
+    $current = Module::Build->current;
+    $conf_file = catfile( $current->base_dir, 't', 'testdata', 'conf',
+        'GBrowse.conf' );
+    TestUtil->template2conf( builder => $current );
+}
 
 use_ok('Bio::Graphics::Browser2');
 use_ok('Bio::Graphics::Browser2::Render::HTML');
@@ -121,3 +128,8 @@ is( $usertracks->is_imported($file), 1, 'it should have imported the file' );
 my $conf = $usertracks->track_conf( $tracks[0] );
 is( -e $conf, 1, 'the usertrack configuration is present in the filesystem' );
 
+
+END {
+	TestUtil->remove_config(builder => $current);
+	remove_tree ('/tmp/gbrowse_testing/',  {keep_root => 1});
+}

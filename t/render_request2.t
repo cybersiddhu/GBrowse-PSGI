@@ -2,15 +2,21 @@ use strict;
 use Test::More qw/no_plan/;
 use Module::Build;
 use File::Spec::Functions;
+use File::Path qw/remove_tree/;
 use lib 't';
 use TestUtil;
 use PlackBuilder;
 use Carp::Always;
 
-my $current = Module::Build->current;
-my $conf_file
-    = catfile( $current->base_dir, 't', 'testdata', 'conf', 'GBrowse.conf' );
-TestUtil->template2conf( builder => $current );
+my $current;
+my $conf_file;
+
+BEGIN {
+    $current = Module::Build->current;
+    $conf_file = catfile( $current->base_dir, 't', 'testdata', 'conf',
+        'GBrowse.conf' );
+    TestUtil->template2conf( builder => $current );
+}
 
 use_ok('Bio::Graphics::Browser2');
 use_ok('Bio::Graphics::Browser2::Render::HTML');
@@ -103,3 +109,9 @@ $render->delete_uploads;
 # something funny with getting render settings
 isnt($render->setting('mag icon height') , 0,  'its mag icon height should be more than zero');
 isnt($render->setting('fine zoom') ,   '',  'its fine zoom should not be empty');
+
+
+END {
+	TestUtil->remove_config(builder => $current);
+	remove_tree ('/tmp/gbrowse_testing/',  {keep_root => 1});
+}

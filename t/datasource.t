@@ -2,18 +2,22 @@ use strict;
 use Test::More qw/no_plan/;
 use Module::Build;
 use File::Spec::Functions;
+use File::Path qw/remove_tree/;
 use IO::String;
 use Carp::Always;
 use lib 't';
 use TestUtil;
 use PlackBuilder;
 
-my $current = Module::Build->current;
+my $current;
+my $conf_file;
 
-## -- generate all configuration files
-TestUtil->template2conf( builder => $current );
-my $conf_file
-    = catfile( $current->base_dir, 't', 'testdata', 'conf', 'GBrowse.conf' );
+BEGIN {
+    $current = Module::Build->current;
+    $conf_file = catfile( $current->base_dir, 't', 'testdata', 'conf',
+        'GBrowse.conf' );
+    TestUtil->template2conf( builder => $current );
+}
 
 use_ok('Bio::Graphics::Browser2');
 my $req     = PlackBuilder->mock_request;
@@ -117,7 +121,7 @@ $req = PlackBuilder->mock_request_with_remote( remote_user => 'lstein' );
 $globals->req($req);
 $source = $globals->create_data_source( $session->source );
 %tracks = map { $_ => 1 } $source->labels;
-is( exists $tracks{Variation}, 1 );
+isnt( exists $tracks{Variation}, 1 ,  'Variation track exist');
 
 # test that make_link should produce a fatal error
 #ok( !eval { $source->make_link(); 1 } );
@@ -176,3 +180,7 @@ END
 is( @labels + 0, $source->labels + 0 );
 is( $source->setting( fred => 'glyph' ), undef );
 
+END {
+	TestUtil->remove_config(builder => $current);
+	remove_tree ('/tmp/gbrowse_testing/',  {keep_root => 1});
+}

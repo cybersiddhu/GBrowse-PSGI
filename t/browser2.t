@@ -3,7 +3,6 @@ use Test::More qw/no_plan/;
 use Module::Build;
 use File::Spec::Functions;
 use File::Path qw/remove_tree make_path/;
-use Carp::Always;
 use lib 't';
 use TestUtil;
 use PlackBuilder;

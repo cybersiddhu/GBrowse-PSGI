@@ -2,15 +2,22 @@ use strict;
 use Test::More qw/no_plan/;
 use Module::Build;
 use File::Spec::Functions;
+use File::Path qw/remove_tree/;
 use lib 't';
 use TestUtil;
 use PlackBuilder;
 use Carp::Always;
 
-my $current = Module::Build->current;
-my $conf_file
-    = catfile( $current->base_dir, 't', 'testdata', 'conf', 'GBrowse.conf' );
-TestUtil->template2conf( builder => $current );
+
+my $current;
+my $conf_file;
+
+BEGIN {
+    $current = Module::Build->current;
+    $conf_file = catfile( $current->base_dir, 't', 'testdata', 'conf',
+        'GBrowse.conf' );
+    TestUtil->template2conf( builder => $current );
+}
 
 use_ok('Bio::Graphics::Browser2');
 use_ok('Bio::Graphics::Browser2::Render::HTML');
@@ -210,3 +217,7 @@ is( $status, 204, 'it has no content HTTP status' );
 is( $render->state()->{features}{'Motifs'}{'visible'},
     1, 'it has visible feature' );
 
+END {
+	TestUtil->remove_config(builder => $current);
+	remove_tree ('/tmp/gbrowse_testing/',  {keep_root => 1});
+}

@@ -2,18 +2,27 @@ use strict;
 use Test::More qw/no_plan/;
 use Module::Build;
 use File::Spec::Functions;
+use File::Path qw/remove_tree/;
 use lib 't';
+use PlackBuilder;
 use TestUtil;
 
-my $current = Module::Build->current;
-my $conf_file
-    = catfile( $current->base_dir, 't', 'testdata', 'conf', 'GBrowse.conf' );
-TestUtil->template2conf( builder => $current );
+my $current;
+my $conf_file;
+
+BEGIN {
+    $current = Module::Build->current;
+    $conf_file = catfile( $current->base_dir, 't', 'testdata', 'conf',
+        'GBrowse.conf' );
+    TestUtil->template2conf( builder => $current );
+}
 
 use_ok('Bio::Graphics::Browser2');
 use_ok('Bio::Graphics::Browser2::Region');
 
+my $req = PlackBuilder->mock_request;
 my $browser2 = Bio::Graphics::Browser2->new($conf_file);
+$browser2->req($req);
 my $session  = $browser2->session;
 my $source   = $browser2->create_data_source('volvox');
 my $state    = $session->page_settings;
@@ -111,6 +120,12 @@ is( join('|', @dbids), 'CleavageSites|general|volvox2:database' );
 
 my @seqid = sort map { $_->seq_id } @$features;
 is( join('|', @seqid), 'ctgA|ctgB|ctgB' );
+
+
+END {
+	TestUtil->remove_config(builder => $current);
+	remove_tree ('/tmp/gbrowse_testing/',  {keep_root => 1});
+}
 
 #$features
 #    = $search->search_features_remotely( { -search_term => 'Heterodox14' } )

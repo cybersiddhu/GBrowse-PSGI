@@ -61,7 +61,7 @@ while ( time() - $time < 10 ) {
 # each track should start with either EMPTY or PENDING and end with AVAILABLE
 for my $label ( keys %cumulative_status ) {
     like( $cumulative_status{$label}[0], qr/^(EMPTY|PENDING|AVAILABLE)$/ );
-    is( $cumulative_status{$label}[-1], 'AVAILABLE' );
+    like( $cumulative_status{$label}[-1], qr/PENDING|AVAILABLE/ );
 }
 
 # test caching
@@ -102,6 +102,7 @@ is( substr(
     "<!-- EXPIRED -->"
 );
 
+remove_tree ('/tmp/gbrowse_testing/',  {keep_root => 1});
 
 sub usleep {
     my $fractional_seconds = shift;
