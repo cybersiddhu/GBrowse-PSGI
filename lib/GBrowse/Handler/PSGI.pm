@@ -17,7 +17,7 @@ sub new {
     $class = ref $class || $class;
     my $self = bless {}, $class;
     for my $p (qw/conf htdocs/) {
-        $self->$p( $arg{$p} ) if defined $arp{$p};
+        $self->$p( $arg{$p} ) if defined $arg{$p};
     }
     return $self;
 }
