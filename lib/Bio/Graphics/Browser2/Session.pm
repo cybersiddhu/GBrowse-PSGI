@@ -7,7 +7,7 @@ use warnings;
 
 use CGI::Session;
 use CGI::Cookie;
-use Fcntl 'LOCK_EX', 'LOCK_SH';
+use Fcntl qw(:flock LOCK_EX LOCK_SH);
 use File::Spec;
 use File::Path 'mkpath';
 use Digest::MD5 'md5_hex';

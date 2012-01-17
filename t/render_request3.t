@@ -19,6 +19,7 @@ my $req = PlackBuilder->mock_request(
     'name=ctgA:1..20000;label=Clones-Transcripts-Motifs');
 isa_ok( $req, 'Plack::Request' );
 my $browser2 = Bio::Graphics::Browser2->new($conf_file);
+$browser2->req($req);
 my $session  = $browser2->session;
 my $source   = $browser2->create_data_source( $session->source );
 my $render = Bio::Graphics::Browser2::Render::HTML->new( $source, $session );
@@ -54,6 +55,7 @@ $req
     = PlackBuilder->mock_request(
     'name=ctgA:1..20000;label=Clones-Transcripts-Motifs-BindingSites-TransChip'
     );
+$browser2->req($req);
 $render->req($req);
 $render->update_state;
 $s              = $render->region->segments;

@@ -17,6 +17,7 @@ use_ok('Bio::Graphics::Browser2::Render::HTML');
 
 my $req      = PlackBuilder->mock_request();
 my $browser2 = Bio::Graphics::Browser2->new($conf_file);
+$browser2->req($req);
 my $session  = $browser2->session;
 my $source   = $browser2->create_data_source( $session->source );
 my $render = Bio::Graphics::Browser2::Render::HTML->new( $source, $session );

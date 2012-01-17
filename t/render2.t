@@ -19,6 +19,7 @@ use_ok('Bio::Graphics::Browser2');
 use_ok('Bio::Graphics::Browser2::Render');
 
 my $browser2 = Bio::Graphics::Browser2->new($conf_file);
+$browser2->req($req);
 my $session  = $browser2->session;
 my $source   = $browser2->create_data_source( $session->source );
 my $render   = Bio::Graphics::Browser2::Render->new( $source, $session );
@@ -63,7 +64,7 @@ is($render->state->{width},800,  'it returns the default width');
 is($render->state->{grid},1,  'it returns the default grid value');
 
 ## -- new mock request
-$req = PlackBuilder->mock_request('width=1024;grid=0');
+$req = PlackBuilder->mock_request_from_query('width=1024;grid=0');
 $render->req($req);
 $render->update_options;
 is($render->state->{width},1024,  'it returns the new value of the width');
