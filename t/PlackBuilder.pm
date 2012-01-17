@@ -9,25 +9,23 @@ use Carp;
 # Module implementation
 #
 
-my $env = {
-    'HTTP_HOST'       => 'example.com',
-    'SCRIPT_NAME'     => '/browser',
-    'REQUEST_METHOD'  => 'GET',
-    'SERVER_PROTOCOL' => 'HTTP/1.1',
-    'REMOTE_ADDR'     => '127.0.0.1',
-    'psgi.version'    => [ 1, 0 ],
-    'psgi.errors'     => undef,
-    'psgi.input'      => undef,
-    'psgi.url_scheme' => 'http'
-};
-
 sub mock_request {
     my ( $class, $query_string ) = @_;
+    my $env = {
+        'HTTP_HOST'       => 'example.com',
+        'SCRIPT_NAME'     => '/browser',
+        'REQUEST_METHOD'  => 'GET',
+        'SERVER_PROTOCOL' => 'HTTP/1.1',
+        'REMOTE_ADDR'     => '127.0.0.1',
+        'psgi.version'    => [ 1, 0 ],
+        'psgi.errors'     => undef,
+        'psgi.input'      => undef,
+        'psgi.url_scheme' => 'http'
+    };
     my $req;
     if ($query_string) {
-    	my $new_env = $env;
-    	$new_env->{QUERY_STRING} = $query_string;
-        $req = Plack::Request->new( $new_env );
+        $env->{QUERY_STRING} = $query_string;
+        $req = Plack::Request->new($env);
     }
     else {
         $req = Plack::Request->new($env);
@@ -38,13 +36,36 @@ sub mock_request {
 sub mock_request_from_query {
     my ( $class, $query_string ) = @_;
     croak "no query string given\n" if !$query_string;
-    return $class->mock_request($query_string);
+    my $new_env = {
+        'HTTP_HOST'       => 'example.com',
+        'SCRIPT_NAME'     => '/browser',
+        'REQUEST_METHOD'  => 'GET',
+        'SERVER_PROTOCOL' => 'HTTP/1.1',
+        'REMOTE_ADDR'     => '127.0.0.1',
+        'psgi.version'    => [ 1, 0 ],
+        'psgi.errors'     => undef,
+        'psgi.input'      => undef,
+        'psgi.url_scheme' => 'http'
+    };
+    $new_env->{QUERY_STRING} = $query_string;
+    return Plack::Request->new($new_env);
 }
 
 sub mock_request_from_path {
     my ( $class, $path ) = @_;
     croak "no query string given\n" if !$path;
-    my $new_env = $env;
+    my $new_env = {
+        'HTTP_HOST'       => 'example.com',
+        'SCRIPT_NAME'     => '/browser',
+        'REQUEST_METHOD'  => 'GET',
+        'SERVER_PROTOCOL' => 'HTTP/1.1',
+        'REMOTE_ADDR'     => '127.0.0.1',
+        'psgi.version'    => [ 1, 0 ],
+        'psgi.errors'     => undef,
+        'psgi.input'      => undef,
+        'psgi.url_scheme' => 'http'
+    };
+
     $new_env->{PATH_INFO} = $path;
     return Plack::Request->new($new_env);
 }
@@ -52,7 +73,17 @@ sub mock_request_from_path {
 sub mock_request_with_remote {
     my ( $class, %arg ) = @_;
     croak "Need to pass options\n" if keys %arg == 0;
-    my $new_env = $env;
+    my $new_env = {
+        'HTTP_HOST'       => 'example.com',
+        'SCRIPT_NAME'     => '/browser',
+        'REQUEST_METHOD'  => 'GET',
+        'SERVER_PROTOCOL' => 'HTTP/1.1',
+        'REMOTE_ADDR'     => '127.0.0.1',
+        'psgi.version'    => [ 1, 0 ],
+        'psgi.errors'     => undef,
+        'psgi.input'      => undef,
+        'psgi.url_scheme' => 'http'
+    };
     for my $k (qw/remote_user remote_host/) {
         if ( defined $arg{$k} ) {
             $new_env->{ uc $k } = $arg{$k};
