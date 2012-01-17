@@ -2,25 +2,35 @@ use strict;
 use Test::More qw/no_plan/;
 use Module::Build;
 use File::Spec::Functions;
+use File::Path qw/remove_tree make_path/;
+use Carp::Always;
 use lib 't';
 use TestUtil;
+use PlackBuilder;
 
-my $current = Module::Build->current;
+my $current;
+my $conf_file;
 
-## -- generate all configuration files
-TestUtil->template2conf( builder => $current );
+BEGIN {
+    $current = Module::Build->current;
+    $conf_file = catfile( $current->base_dir, 't', 'testdata', 'conf',
+        'GBrowse.conf' );
+    TestUtil->template2conf( builder => $current );
+}
 
-my $conf_file
-    = catfile( $current->base_dir, 't', 'testdata', 'conf', 'GBrowse.conf' );
+my $req = PlackBuilder->mock_request ;
 use_ok('Bio::Graphics::Browser2');
 my $browser2 = Bio::Graphics::Browser2->new($conf_file);
+$browser2->req($req);
 isa_ok( $browser2, 'Bio::Graphics::Browser2' );
 my $session = $browser2->session;
 isa_ok( $session, 'Bio::Graphics::Browser2::Session' );
 my $id = $session->id;
 like( $id, qr/\w+/, 'it has a session id' );
+$session->flush;
+undef $session;
 
-my $session2 = $browser2->session($id);
+$session = $browser2->session($id);
 isa_ok( $session, 'Bio::Graphics::Browser2::Session' );
 is( $id, $session->id, 'matches the session id' );
 
@@ -40,3 +50,7 @@ my $source = $browser2->create_data_source($dsn);
 isa_ok( $source, 'Bio::Graphics::Browser2::DataSource' );
 
 
+END {
+	TestUtil->remove_config(builder => $current);
+	remove_tree ('/tmp/gbrowse_testing/',  {keep_root => 1});
+}
