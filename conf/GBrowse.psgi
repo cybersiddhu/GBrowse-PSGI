@@ -11,6 +11,7 @@ use warnings;
 #use Plack::App::Proxy;
 use GBrowse::Handler::PSGI;
 use Plack::Builder;
+use Plack::App::File;
 
 # Variable substitution during Build
 $ENV{GBROWSE_CGIBIN}

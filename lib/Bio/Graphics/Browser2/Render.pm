@@ -13,6 +13,7 @@ use Data::Dumper;
 use English;
 use Hash::MultiValue;
 use URI::Escape;
+use CGI ':html', ':form';
 
 use Bio::Graphics::Browser2::I18n;
 use Bio::Graphics::Browser2::PluginSet;
@@ -243,12 +244,13 @@ sub destroy {
 sub response {
     my ( $self, $res ) = @_;
     if ($res) {
+    	$res->status(200);
         $self->{_response} = $res;
         return 1;
     }
     return $self->{_response} if defined $self->{_response};
     if ( my $req = $self->req ) {
-        $self->{_response} = $req->new_response;
+        $self->{_response} = $req->new_response(200);
         return $self->{_response};
     }
 }
@@ -809,8 +811,8 @@ sub render {
 sub render_header {
     my $self = shift;
     my $resp = $self->response;
-    $resp->cookie->{$CGI::Session::NAME} = $self->state_cookie;
-    $resp->cookie->{$CGI::Session::NAME} = $self->auth_cookie;
+    $resp->cookies->{$CGI::Session::NAME} = $self->state_cookie;
+    $resp->cookies->{$CGI::Session::NAME} = $self->auth_cookie;
     $resp->headers(
         {   'cache_control' => 'no-cache',
             'charset'       => $self->translate('CHARSET')
@@ -860,9 +862,10 @@ sub create_cookie {
 
 # For debugging
 sub allparams {
+	my ($self) = @_;
     my $args = {};
-    for my $key ( param() ) {
-        $args->{$key} = param($key);
+    for my $key ( $self->req->parameters->keys ) {
+        $args->{$key} = $self->req->param($key);
     }
     "<pre>" . Data::Dumper::Dumper($args) . "</pre>";
 }
@@ -1120,7 +1123,7 @@ sub render_panels {
 sub get_post_load_functions {
     my $self = shift;
     my @fun;
-    if ( my $url = param('eurl') ) {
+    if ( my $url = $self->req->param('eurl') ) {
         my $trackname = $self->user_tracks->escape_url($url);
         push @fun, 'Controller.select_tab("custom_tracks_page")';
         push @fun, "loadURL('$trackname','$url',true)";
@@ -1602,7 +1605,7 @@ sub handle_track_dump {
 sub handle_plugins {
     my $self = shift;
 
-    my $plugin_base = param('plugin');
+    my $plugin_base = $self->req->param('plugin');
     return unless ($plugin_base);
 
     $self->init_plugins();
@@ -1809,8 +1812,8 @@ sub write_auto {
 
 sub handle_download_userdata {
     my $self  = shift;
-    my $ftype = param('userdata_download') or return;
-    my $file  = param('track') or return;
+    my $ftype = $self->req->param('userdata_download') or return;
+    my $file  = $self->req->param('track') or return;
 
     my $userdata = $self->user_tracks;
     my $download
@@ -2197,7 +2200,7 @@ sub auto_open {
             $self->add_track_to_state($desired_label);
             $state->{h_feat} = {};
             $state->{h_feat}{ lc $feature->display_name } = 'yellow'
-                unless param('h_feat') && param('h_feat') eq '_clear_';
+                unless $self->req->param('h_feat') && $self->req->param('h_feat') eq '_clear_';
         }
     }
 }
@@ -2339,17 +2342,17 @@ sub reconfigure_track {
     my $state  = $self->state();
     my $source = $self->data_source;
 
-    $state->{features}{$label}{visible} = param('show_track') ? 1 : 0;
-    $state->{features}{$label}{options} = param('format_option');
+    $state->{features}{$label}{visible} = $self->req->param('show_track') ? 1 : 0;
+    $state->{features}{$label}{options} = $self->req->param('format_option');
     my $dynamic = $self->translate('DYNAMIC_VALUE');
-    my $mode    = param('mode');
+    my $mode    = $self->req->param('mode');
     my $mult    = $self->details_mult;
 
-    my $length       = param('segment_length') * $mult     || 0;
-    my $semantic_low = param('apply_semantic_low') * $mult || 0;
-    my $semantic_hi  = param('apply_semantic_hi') * $mult  || 0;
-    my $delete_semantic = param('delete_semantic');
-    my $summary         = param('summary_mode');
+    my $length       = $self->req->param('segment_length') * $mult     || 0;
+    my $semantic_low = $self->req->param('apply_semantic_low') * $mult || 0;
+    my $semantic_hi  = $self->req->param('apply_semantic_hi') * $mult  || 0;
+    my $delete_semantic = $self->req->param('delete_semantic');
+    my $summary         = $self->req->param('summary_mode');
 
     $state->{features}{$label}{summary_mode_len} = $summary
         if defined $summary;
@@ -2366,9 +2369,9 @@ sub reconfigure_track {
         : $state->{features}{$label}{semantic_override}
         {"$semantic_low:$semantic_hi"} = {};
 
-    my $glyph = param('conf_glyph') || '';
-    for my $s ( grep {/^conf_/} param() ) {
-        my @values = param($s);
+    my $glyph = $self->req->param('conf_glyph') || '';
+    for my $s ( grep {/^conf_/} $self->req->param() ) {
+        my @values = $self->req->param($s);
         my $value  = $values[-1];    # last one wins
         $s =~ s/^conf_//;
         next unless defined $value;
@@ -2398,7 +2401,7 @@ sub reconfigure_track {
             delete $o->{$s};
         }
         elsif ( $s eq 'bicolor_pivot' && $value eq 'value' ) {
-            my $bp = param('bicolor_pivot_value');
+            my $bp = $self->req->param('bicolor_pivot_value');
             $o->{$s} = $bp
                 if !defined $configured_value
                     or $bp != $configured_value;
