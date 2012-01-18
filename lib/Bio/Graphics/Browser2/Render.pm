@@ -413,8 +413,8 @@ sub run_asynchronous_event {
         if TRACE_RUN;
 
     # add the cookies!
-    $resp->cookie->{$CGI::Session::NAME} = $self->state_cookie;
-    $resp->cookie->{$CGI::Session::NAME} = $self->auth_cookie;
+    $resp->cookies->{$CGI::Session::NAME} = $self->state_cookie;
+    $resp->cookies->{$CGI::Session::NAME} = $self->auth_cookie;
     $resp->status($status);
     $resp->content_type($mime_type);
 
