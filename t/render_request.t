@@ -217,6 +217,15 @@ is( $status, 204, 'it has no content HTTP status' );
 is( $render->state()->{features}{'Motifs'}{'visible'},
     1, 'it has visible feature' );
 
+#$req = PlackBuilder->mock_request(
+#    'action=navigate&navigate=left 0&view_start=NaN&view_end=NaN&snapshot=false');
+#$render->req($req);
+#undef $render_object;
+#( $status, $mime, $render_object ) = $render->asynchronous_event();
+#diag($status);
+#diag(explain $render_object);
+#
+
 END {
 	TestUtil->remove_config(builder => $current);
 	remove_tree ('/tmp/gbrowse_testing/',  {keep_root => 1});

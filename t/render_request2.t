@@ -24,9 +24,9 @@ use_ok('Bio::Graphics::Browser2::Render::HTML');
 my $req      = PlackBuilder->mock_request('name=ctgA');
 my $browser2 = Bio::Graphics::Browser2->new($conf_file);
 $browser2->req($req);
-my $session  = $browser2->session;
-my $source   = $browser2->create_data_source( $session->source );
-my $render = Bio::Graphics::Browser2::Render::HTML->new( $source, $session );
+my $session = $browser2->session;
+my $source  = $browser2->create_data_source( $session->source );
+my $render  = Bio::Graphics::Browser2::Render::HTML->new( $source, $session );
 $render->req($req);
 $render->init_database;
 $render->init_plugins;
@@ -101,17 +101,17 @@ is( scalar @{ $render->region->features },
 is( @{ $render->region->segments },
     11, "Finder plugin should have found 11 unique motif segments" );
 
-
 # The finder plugin creates a "My Tracks" track, which then interferes with
 # other tests.
 $render->delete_uploads;
 
 # something funny with getting render settings
-isnt($render->setting('mag icon height') , 0,  'its mag icon height should be more than zero');
-isnt($render->setting('fine zoom') ,   '',  'its fine zoom should not be empty');
-
+isnt( $render->setting('mag icon height'),
+    0, 'its mag icon height should be more than zero' );
+isnt( $render->setting('fine zoom'), '',
+    'its fine zoom should not be empty' );
 
 END {
-	TestUtil->remove_config(builder => $current);
-	remove_tree ('/tmp/gbrowse_testing/',  {keep_root => 1});
+    TestUtil->remove_config( builder => $current );
+    remove_tree( '/tmp/gbrowse_testing/', { keep_root => 1 } );
 }
